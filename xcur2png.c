@@ -694,8 +694,35 @@ int saveConfAndPNGs (const XcursorImages* xcIs, const char* xcurFilePart, int su
     XcursorDim height = xcIs->images[count]->height;
     XcursorDim xhot = xcIs->images[count]->xhot;
     XcursorDim yhot = xcIs->images[count]->yhot;
+
     XcursorUInt delay = xcIs->images[count]->delay;
     XcursorPixel *pixels = xcIs->images[count]->pixels;
+
+    XcursorDim size2 = size;
+
+    if (height == width) {
+      size2 = width;
+    }
+    float xhot2 = (float)xhot;
+    float yhot2 = (float)yhot;
+
+    float error_scale = (float)size2 / (float)size;
+
+    if (error_scale != 1.00f) {
+      xhot2 = (float)xhot * error_scale;
+      yhot2 = (float)yhot * error_scale;
+    }
+
+    if (xhot2 > (float)size2) {
+      xhot2 = (float)size2 / 2.0f;
+    }
+
+    if (yhot2 > (float)size2) {
+      yhot2 = (float)size2 / 2.0f;
+    }
+
+    size = size2;
+
 
     if (version != 1)
     {
@@ -712,7 +739,7 @@ int saveConfAndPNGs (const XcursorImages* xcIs, const char* xcurFilePart, int su
     }
 
     /* Write config-file which can be reused by xcursorgen. */
-    fprintf (conffp,"%d\t%d\t%d\t%s%s_%03d.png\t%d\n", size, xhot, yhot, imagePrefix, xcurFilePart, i, delay);
+    fprintf (conffp,"%d\t%f\t%f\t%s%s_%03d.png\t%d\n", size, xhot2, yhot2, imagePrefix, xcurFilePart, i, delay);
     
     //Save png file.
     if (dry_run)
