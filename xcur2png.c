@@ -16,7 +16,7 @@
 /* Todo: atoi error handling */
 /* help is -h in manual */
 
-#include <config.h>
+#include "config.h"
 
 #define _ATFILE_SOURCE
 #include <stdio.h>
@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/syslimits.h>
 #include <fcntl.h>
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -40,6 +41,7 @@
 
 int quiet = 0; /* 1: output is quiet, 0: not quiet */
 int dry_run = 0; /* 1:don't output PNGs and conf is output to stdout. */
+
 
 #define VERBOSE_PRINT(...) \
   if (!quiet) { fprintf (stderr, __VA_ARGS__); }
@@ -106,7 +108,7 @@ void parseOptions (int argc, char* argv[], char** confp,
     {NULL,              0,                      NULL,     0}
   };
 
-  while (ret = getopt_long (argc, argv, "Vhc:d:i:qn", longopts, NULL))
+  while ((ret = getopt_long (argc, argv, "Vhc:d:i:qn", longopts, NULL)))
   {
     if (ret == -1)
       break;
@@ -557,8 +559,11 @@ int writePngFileFromXcur (const XcursorDim width, const XcursorDim height,
   }
 
   png_init_io(png_ptr, fp);
+  //const XCursorDim*  width2 = &width;
+  png_uint_32p width2 = (png_uint_32p)(&width);
+  png_uint_32p height2 = (png_uint_32p)(&height);
 
-  png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB_ALPHA,
+  png_set_IHDR(png_ptr, info_ptr, *width2, *height2, 8, PNG_COLOR_TYPE_RGB_ALPHA,
                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
   //Write file info.
@@ -671,7 +676,7 @@ int saveConfAndPNGs (const XcursorImages* xcIs, const char* xcurFilePart, int su
   int ret;
   int count = 0;
   char pngName[PATH_MAX] = {0};
-  extern dry_run;
+  extern int dry_run;
   
   //Write comment on config-file.
   fprintf (conffp,"#size\txhot\tyhot\tPath to PNG image\tdelay\n");
